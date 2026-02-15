@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You've Got a Valentine! 💌</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Playfair Display', serif;
+            background: #4a148c;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .container {
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: fadeIn 1s ease-in;
+        }
+
+        .envelope-wrapper {
+            position: relative;
+            width: 400px;
+            height: 300px;
+            margin: 0 auto;
+        }
+
+        .envelope {
+            position: relative;
+            width: 400px;
+            height: 250px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .envelope:hover:not(.opened) {
+            transform: scale(1.05);
+        }
+
+        .envelope-back {
+            position: absolute;
+            width: 400px;
+            height: 250px;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .envelope-flap {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 200px solid transparent;
+            border-right: 200px solid transparent;
+            border-bottom: 150px solid #ff6b9d;
+            top: 0;
+            left: 0;
+            transform-origin: top center;
+            transition: transform 0.8s ease;
+            z-index: 10;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));
+        }
+
+        .envelope-flap::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: -195px;
+            width: 390px;
+            height: 140px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.2), transparent);
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+        }
+
+        .envelope.opened .envelope-flap {
+            transform: rotateX(180deg);
+            opacity: 0;
+            transition: transform 0.8s ease, opacity 0.8s ease;
+        }
+
+        .envelope.opened .envelope-back {
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        .card {
+            position: absolute;
+            width: 350px;
+            height: 450px;
+            background: white;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, 20%);
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: all 1.2s ease;
+            transition-delay: 0.4s;
+            z-index: 5;
+            overflow: hidden;
+        }
+
+        .envelope.opened .card {
+            transform: translate(-50%, -50%) scale(1.2);
+            opacity: 1;
+            z-index: 100;
+        }
+
+        .card-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .card iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .hearts {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .heart {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #ff6b9d;
+            transform: rotate(45deg);
+            opacity: 0;
+            animation: float 4s ease-in infinite;
+        }
+
+        .heart::before,
+        .heart::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #ff6b9d;
+            border-radius: 50%;
+        }
+
+        .heart::before {
+            top: -10px;
+            left: 0;
+        }
+
+        .heart::after {
+            top: 0;
+            left: -10px;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(45deg) scale(0);
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(405deg) scale(1);
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .instruction {
+            color: white;
+            font-size: 1.2rem;
+            margin-top: 2rem;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .envelope.opened ~ .instruction {
+            opacity: 0;
+        }
+
+        .download-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #ff6b9d;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 107, 157, 0.4);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .download-btn.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .download-btn:hover {
+            background: #ff4d88;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(255, 107, 157, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .envelope-wrapper {
+                width: 300px;
+                height: 225px;
+            }
+            
+            .envelope,
+            .envelope-back {
+                width: 300px;
+                height: 188px;
+            }
+            
+            .envelope-flap {
+                border-left: 150px solid transparent;
+                border-right: 150px solid transparent;
+                border-bottom: 112px solid #ff6b9d;
+            }
+            
+            .card {
+                width: 280px;
+                height: 380px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    <div class="hearts" id="hearts"></div>
+    
+    <div class="container">
+        <h1>happy valentine's day, josh! &lt;3</h1>
+        
+        <div class="envelope-wrapper">
+            <div class="envelope" id="envelope">
+                <div class="envelope-back"></div>
+                <div class="envelope-flap"></div>
+                <div class="card" id="card">
+                    <div class="card-content">
+                        <img id="cardImage" src="" style="display:none; width: 100%; height: 100%; object-fit: contain;" alt="Valentine's Card">
+                        <div id="cardPlaceholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #666;">
+                            <p style="font-size: 1.2rem; margin-bottom: 10px;">💝 Your Valentine's Card</p>
+                            <p style="font-size: 0.9rem;">Place your PNG file here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <p class="instruction">click to open a surprise :D</p>
+    </div>
+
+    <button class="download-btn" id="downloadBtn">download love letta </button>
+
+    <script>
+        const envelope = document.getElementById('envelope');
+        const hearts = document.getElementById('hearts');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const cardImage = document.getElementById('cardImage');
+        const cardPlaceholder = document.getElementById('cardPlaceholder');
+        let opened = false;
+
+        // Confetti canvas setup
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        class ConfettiHeart {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = -20;
+                this.size = Math.random() * 15 + 10;
+                this.speedY = Math.random() * 3 + 2;
+                this.speedX = Math.random() * 2 - 1;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = Math.random() * 5 - 2.5;
+                this.opacity = 1;
+                this.colors = ['#ff6b9d', '#ff1744', '#f50057', '#ff4081', '#ff80ab'];
+                this.color = this.colors[Math.floor(Math.random() * this.colors.length)];
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate((this.rotation * Math.PI) / 180);
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = this.color;
+                
+                // Draw heart shape
+                ctx.beginPath();
+                const size = this.size;
+                ctx.moveTo(0, size * 0.3);
+                ctx.bezierCurveTo(-size * 0.5, -size * 0.3, -size, size * 0.1, 0, size);
+                ctx.bezierCurveTo(size, size * 0.1, size * 0.5, -size * 0.3, 0, size * 0.3);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX;
+                this.rotation += this.rotationSpeed;
+                
+                // Fade out near bottom
+                if (this.y > canvas.height - 100) {
+                    this.opacity -= 0.02;
+                }
+                
+                return this.y < canvas.height && this.opacity > 0;
+            }
+        }
+
+        let confettiHearts = [];
+        let animationFrame;
+
+        function animateConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            confettiHearts = confettiHearts.filter(heart => {
+                heart.draw();
+                return heart.update();
+            });
+            
+            if (confettiHearts.length > 0) {
+                animationFrame = requestAnimationFrame(animateConfetti);
+            }
+        }
+
+        function launchConfetti() {
+            // Create burst of confetti hearts
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    confettiHearts.push(new ConfettiHeart());
+                }, i * 20);
+            }
+            
+            if (!animationFrame) {
+                animateConfetti();
+            }
+        }
+
+        // Try to load the PNG - change this to your PNG filename
+        const cardFilename = 'valentine-card.png';
+        
+        // Check if image exists and load it
+        const img = new Image();
+        img.onload = function() {
+            cardImage.src = cardFilename;
+            cardImage.style.display = 'block';
+            cardPlaceholder.style.display = 'none';
+        };
+        img.onerror = function() {
+            console.log('Image not found, using placeholder');
+        };
+        img.src = cardFilename;
+
+        envelope.addEventListener('click', function() {
+            if (!opened) {
+                envelope.classList.add('opened');
+                opened = true;
+                createHearts();
+                launchConfetti(); // Launch confetti when envelope opens!
+                
+                setTimeout(() => {
+                    downloadBtn.classList.add('visible');
+                }, 1500);
+            }
+        });
+
+        downloadBtn.addEventListener('click', function() {
+            if (cardImage.src) {
+                window.open(cardFilename, '_blank');
+            }
+        });
+
+        function createHearts() {
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement('div');
+                    heart.classList.add('heart');
+                    heart.style.left = Math.random() * 100 + '%';
+                    heart.style.animationDelay = Math.random() * 2 + 's';
+                    heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
+                    hearts.appendChild(heart);
+                    
+                    setTimeout(() => heart.remove(), 7000);
+                }, i * 200);
+            }
+        }
+
+        // Create some initial floating hearts
+        setInterval(() => {
+            if (opened) {
+                const heart = document.createElement('div');
+                heart.classList.add('heart');
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.animationDelay = '0s';
+                heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
+                hearts.appendChild(heart);
+                
+                setTimeout(() => heart.remove(), 7000);
+            }
+        }, 1500);
+    </script>
+</body>
+</html>
